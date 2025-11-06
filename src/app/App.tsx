@@ -1,17 +1,22 @@
 import React from "react";
-import "../css/App.css";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import "../css/App.css";
+import { RippleBadge } from "./material/MaterialTheme/styled";
 
 function App() {
   return (
-    <Container maxWidth="sm">
+    <Container sx={{ backgroundColor: "red" }}>
       <Stack flexDirection={"column"}>
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" component={"h4"}>
             Create React App on Typescript with Redux
           </Typography>
         </Box>
-        <Button variant="contained">Contained</Button>
+        <Box>
+          <RippleBadge badgeContent={4}>
+            <Button variant="contained">Contained</Button>
+          </RippleBadge>
+        </Box>
       </Stack>
     </Container>
   );
