@@ -1,5 +1,4 @@
 import React from "react";
-import "../css/App.css";
 import { Route, Switch, useLocation } from "react-router-dom";
 import { HomePage } from "./screens/homePage";
 import { ProductsPage } from "./screens/productsPage";
@@ -8,6 +7,8 @@ import { UserPage } from "./screens/userPage";
 import { OtherNavbar } from "./components/headers/OtherNavbar";
 import { HomeNavbar } from "./components/headers/HomeNavbar";
 import { Footer } from "./components/footer";
+
+import "../css/App.css";
 
 function App() {
   const location = useLocation();
