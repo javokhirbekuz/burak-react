@@ -28,7 +28,7 @@ function App() {
         </Route>{" "}
         <Route path={"/member-page"}>
           <UserPage />
-        </Route>{" "}
+        </Route>
         <Route path={"/help"}>
           <HelpPage />
         </Route>
