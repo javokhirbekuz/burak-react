@@ -1,38 +1,36 @@
 import React from "react";
-
 import { Route, Switch, useLocation } from "react-router-dom";
 import HomePage from "./screens/homePage";
 import ProductsPage from "./screens/productsPage";
 import OrdersPage from "./screens/ordersPage";
-import UserPage from "./screens/userPage";
-import OtherNavbar from "./components/headers/OtherNavbar";
-import HomeNavbar from "./components/headers/HomeNavbar";
-import Footer from "./components/footer";
+import UsersPage from "./screens/userPage";
 import HelpPage from "./screens/helpPage";
+import HomeNavbar from "./components/headers/HomeNavbar";
+import OtherNavbar from "./components/headers/OtherNavbar";
+import Footer from "./components/footer";
 import "../css/App.css";
 import "../css/navbar.css";
 import "../css/footer.css";
 
 function App() {
   const location = useLocation();
-  console.log("Location:", location);
   return (
     <>
       {location.pathname === "/" ? <HomeNavbar /> : <OtherNavbar />}
       <Switch>
-        <Route path={"/products"}>
+        <Route path="/products">
           <ProductsPage />
         </Route>
-        <Route path={"/orders"}>
+        <Route path="/orders">
           <OrdersPage />
-        </Route>{" "}
-        <Route path={"/member-page"}>
-          <UserPage />
         </Route>
-        <Route path={"/help"}>
+        <Route path="/member-page">
+          <UsersPage />
+        </Route>
+        <Route path="/help">
           <HelpPage />
         </Route>
-        <Route path={"/"}>
+        <Route path="/">
           <HomePage />
         </Route>
       </Switch>
