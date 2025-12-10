@@ -1,4 +1,4 @@
-import React from "react";
+import { createSelector, Dispatch } from "@reduxjs/toolkit";
 import {
   Badge,
   Box,
@@ -13,16 +13,30 @@ import SearchIcon from "@mui/icons-material/Search";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { setProducts } from "./slice";
+import { Product } from "../../lib/types/product";
+import { retrieveProducts } from "./selector";
+
+/**    REDUX SLICE & SELECTOR   **/
+const actionDispatch = (dispatch: Dispatch) => ({
+  setProducts: (data: Product[]) => {
+    dispatch(setProducts(data));
+  },
+});
+
+const productsRetriever = createSelector(retrieveProducts, (products) => ({
+  products,
+}));
 
 const products = [
-  { productName: "Cutlet", imagePath: "/img/cutlet.webp" },
   { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab.webp" },
-  { productName: "Lavash", imagePath: "/img/lavash.webp" },
-  { productName: "Lavash", imagePath: "/img/lavash.webp" },
-  { productName: "Cutlet", imagePath: "/img/cutlet.webp" },
   { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
+  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
 ];
 
 const familyBrands = [
@@ -213,9 +227,10 @@ export default function Products() {
         <Container>
           <Stack className={"address-area"}>
             <Box className={"title"}>Our Address</Box>
+
             <iframe
               title="Adress"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d211183.33729111456!2d128.8532022!3d35.27300674999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3568b86ffe9433cd%3A0xcd9ec76258631b1!2sGimhae-si%2C%20Gyeongsangnam-do!5e1!3m2!1sen!2skr!4v1763542687778!5m2!1sen!2skr"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3032.8980123862757!2d71.91859257606139!3d40.521745271422866!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38bb7f001e43dddd%3A0xc8a5fb4624a551b6!2sAkbarobod%20Q%20V%20P%20(poliklinika)!5e0!3m2!1sen!2skr!4v1762870004147!5m2!1sen!2skr"
               width="1320"
               height="500"
               style={{
