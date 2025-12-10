@@ -16,6 +16,15 @@ import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import { setProducts } from "./slice";
 import { Product } from "../../lib/types/product";
 import { retrieveProducts } from "./selector";
+import { useEffect } from "react";
+import ProductService from "../../services/ProductService";
+import {
+  ProductCollection,
+  ProductSize,
+  ProductVolume,
+} from "../../lib/enums/product.enum";
+import { useDispatch, useSelector } from "react-redux";
+import { serverAPI } from "../../lib/config";
 
 /**    REDUX SLICE & SELECTOR   **/
 const actionDispatch = (dispatch: Dispatch) => ({
@@ -28,17 +37,6 @@ const productsRetriever = createSelector(retrieveProducts, (products) => ({
   products,
 }));
 
-const products = [
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-  { productName: "Kebab", imagePath: "/img/kebab-fresh.webp" },
-];
-
 const familyBrands = [
   { brandName: "Gurme", imagePath: "/img/gurme.webp" },
   { brandName: "Seafood", imagePath: "/img/seafood.webp" },
@@ -47,6 +45,23 @@ const familyBrands = [
 ];
 
 export default function Products() {
+  const { setProducts } = actionDispatch(useDispatch());
+  const { products } = useSelector(productsRetriever);
+  useEffect(() => {
+    const product = new ProductService();
+    product
+      .getProducts({
+        page: 1,
+        limit: 8,
+        order: "createdAt",
+        productCollection: ProductCollection.DISH,
+        search: "",
+      })
+      .then((data) => setProducts(data))
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
   return (
     <div className="products">
       <Container>
@@ -127,14 +142,20 @@ export default function Products() {
 
             <Stack className={"product-wrapper"}>
               {products.length !== 0 ? (
-                products.map((product, index) => {
+                products.map((product: Product) => {
+                  const imagePath = `${serverAPI}/${product.productImages[0]}`;
+                  const sizeVolume =
+                    product.productCollection === ProductCollection.DRINK
+                      ? product.productVolume + " l"
+                      : product.productSize + " size";
+
                   return (
-                    <Stack key={index} className={"product-card"}>
+                    <Stack key={product._id} className={"product-card"}>
                       <Stack
                         className={"product-img"}
-                        sx={{ backgroundImage: `url(${product.imagePath})` }}
+                        sx={{ backgroundImage: `url(${imagePath})` }}
                       >
-                        <div className={"product-sale"}>Normal Size</div>
+                        <div className={"product-sale"}>{sizeVolume}</div>
                         <Button className={"shop-btn product-actions"}>
                           <img
                             src={"/icons/shopping-cart.svg"}
@@ -147,9 +168,15 @@ export default function Products() {
                           className={"view-btn product-actions"}
                           sx={{ right: "36px" }}
                         >
-                          <Badge badgeContent={20} color={"secondary"}>
+                          <Badge
+                            badgeContent={product.productViews}
+                            color={"secondary"}
+                          >
                             <RemoveRedEyeIcon
-                              sx={{ color: false ? "gray" : "white" }}
+                              sx={{
+                                color:
+                                  product.productViews === 0 ? "gray" : "white",
+                              }}
                             ></RemoveRedEyeIcon>
                           </Badge>
                         </Button>
@@ -164,7 +191,7 @@ export default function Products() {
                           style={{ color: "#FF9200" }}
                         >
                           <MonetizationOnIcon />
-                          {12}
+                          {product.productPrice}
                         </div>
                       </Box>
                     </Stack>
