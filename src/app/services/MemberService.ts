@@ -55,11 +55,23 @@ class MemberService {
       console.log("login: ", result);
       const member: Member = result.data.member;
       console.log("member:", member);
-      localStorage.setItem("memberData:", JSON.stringify(member));
+      localStorage.setItem("memberData", JSON.stringify(member));
 
       return member;
     } catch (err) {
       console.log("Error, login:", err);
+      throw err;
+    }
+  }
+  public async logout(): Promise<void> {
+    try {
+      const url = this.path + "/member/logout";
+      const result = await axios.post(url, {}, { withCredentials: true });
+      console.log("logout: ", result);
+
+      localStorage.removeItem("memberData");
+    } catch (err) {
+      console.log("Error, logout:", err);
       throw err;
     }
   }
