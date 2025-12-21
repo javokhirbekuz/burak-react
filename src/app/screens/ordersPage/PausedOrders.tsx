@@ -2,29 +2,42 @@ import React from "react";
 import { Box, Stack } from "@mui/material";
 import Button from "@mui/material/Button";
 import TabPanel from "@mui/lab/TabPanel";
+import { useSelector } from "react-redux";
+import { retriveOrdersPage } from "./selector";
+import { Product } from "../../lib/types/product";
+import { serverAPI } from "../../lib/config";
 
 export default function PausedOrders() {
+  const { pausedOrders } = useSelector(retriveOrdersPage);
   return (
     <TabPanel value={"1"}>
       <Stack>
-        {[1, 2].map((ele, index) => {
+        {pausedOrders.map((order) => {
           return (
-            <Box key={index} className={"order-main-box"}>
+            <Box key={order._id} className={"order-main-box"}>
               <Box className={"order-box-scroll"}>
-                {[1, 2, 3, 4, 5].map((ele2, index2) => {
+                {order.orderItems.map((orderItem) => {
+                  const product: Product = order.productData.filter(
+                    (ele: Product) =>
+                      String(ele._id) === String(orderItem.productId)
+                  )[0];
+                  if (!product) return null;
+                  const imagePath = `${serverAPI}/${product.productImages[0]}`;
                   return (
-                    <Box key={index2} className={"orders-name-price"}>
+                    <Box key={orderItem._id} className={"orders-name-price"}>
                       <img
                         src={"/img/lavash.webp"}
                         className={"order-dish-img"}
                       />
-                      <p className={"title-dish"}>Lavash</p>
+                      <p className={"title-dish"}>{product.productName}</p>
                       <Box className={"price-box"}>
-                        <p>$9</p>
+                        <p>${orderItem.itemPrice}</p>
                         <img src={"/icons/close.svg"} />
-                        <p>2</p>
+                        <p>{orderItem.itemQuantity}</p>
                         <img src={"/icons/pause.svg"} />
-                        <p style={{ marginLeft: "15px" }}>$18</p>
+                        <p style={{ marginLeft: "15px" }}>
+                          {orderItem.itemPrice * orderItem.itemQuantity}
+                        </p>
                       </Box>
                     </Box>
                   );
@@ -35,19 +48,19 @@ export default function PausedOrders() {
                 <Box className="box-total">
                   <Box className={"box-total"}>
                     <p>Product price</p>
-                    <p>$18</p>
+                    <p>${order.orderTotal - order.orderDelivery}</p>
                     <img
                       src={"/icons/plus.svg"}
                       style={{ marginLeft: "20px" }}
                     />
                     <p>Delivery cost</p>
-                    <p>$2</p>
+                    <p>${order.orderDelivery}</p>
                     <img
                       src={"/icons/pause.svg"}
                       style={{ marginLeft: "20px" }}
                     />
                     <p>Total</p>
-                    <p>$20</p>
+                    <p>${order.orderTotal}</p>
                   </Box>
                   <Button
                     variant="contained"
@@ -65,14 +78,21 @@ export default function PausedOrders() {
           );
         })}
 
-        {false && (
-          <Box display={"flex"} flexDirection={"row"} justifyContent={"center"}>
-            <img
-              src={"/icons/noimage-list.svg"}
-              style={{ width: 300, height: 300 }}
-            />
-          </Box>
-        )}
+        {!pausedOrders ||
+          (pausedOrders.length === 0 && (
+            <Box
+              display={"flex"}
+              flexDirection={"row"}
+              justifyContent={"center"}
+              className="no-orders-box"
+            >
+              <img
+                className="no-orders-box img "
+                src={"/icons/noimage-list.svg"}
+                style={{ width: 300, height: 300 }}
+              />
+            </Box>
+          ))}
       </Stack>
     </TabPanel>
   );
