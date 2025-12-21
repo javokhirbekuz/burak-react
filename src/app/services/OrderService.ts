@@ -1,6 +1,11 @@
 import { serverAPI } from "../lib/config";
 import axios from "axios";
-import { Order, OrderInquiry, OrderItemInput } from "../lib/types/order";
+import {
+  Order,
+  OrderInquiry,
+  OrderItemInput,
+  OrderUpdateInput,
+} from "../lib/types/order";
 import { CartItem } from "../lib/types/search";
 
 class OrderService {
@@ -9,38 +14,54 @@ class OrderService {
   constructor() {
     this.path = serverAPI;
   }
+
   public async createOrder(input: CartItem[]): Promise<Order> {
     try {
-      const orderItem: OrderItemInput[] = input.map((cartItem: CartItem) => {
+      const orderItems: OrderItemInput[] = input.map((cartItem: CartItem) => {
         return {
-          productId: cartItem._id,
           itemQuantity: cartItem.quantity,
           itemPrice: cartItem.price,
+          productId: cartItem._id,
         };
       });
-
       const url = `${this.path}/order/create`;
-
-      const response = await axios.post(url, orderItem, {
+      const result = await axios.post(url, orderItems, {
         withCredentials: true,
       });
-      console.log("Order created successfully:", response.data);
-      return response.data;
-    } catch (error) {
-      console.log("Error during order creation:", error);
-      throw error;
+      console.log("createOrder:", result);
+      return result.data;
+    } catch (err) {
+      console.log("Error, createOrder:", err);
+      throw err;
     }
   }
-
   public async getMyOrders(input: OrderInquiry): Promise<Order[]> {
     try {
-      const url = `${this.path}/order/all?page=${input.page}&limit=${input.limit}&orderStatus=${input.orderStatus}`;
-      const response = await axios.get(url, { withCredentials: true });
-      console.log("Fetched my orders successfully:", response.data);
-      return response.data;
-    } catch (error) {
-      console.log("Error fetching my orders:", error);
-      throw error;
+      // axios.defaults.withCredentials = true;
+      const url = `${this.path}/order/all`;
+      const query = `?page=${input.page}&limit=${input.limit}&orderStatus=${input.orderStatus}`;
+
+      const result = await axios.get(url + query, { withCredentials: true });
+      console.log("getMyOrders", result);
+
+      return result.data;
+    } catch (err) {
+      console.log("Error, getMyOrders:", err);
+      throw err;
+    }
+  }
+  public async updateOrder(input: OrderUpdateInput): Promise<Order> {
+    try {
+      // axios.defaults.withCredentials = true;
+      const url = `${this.path}/order/update`;
+
+      const result = await axios.post(url, input, { withCredentials: true });
+      console.log("updateOrder", result);
+
+      return result.data;
+    } catch (err) {
+      console.log("Error, updateOrder:", err);
+      throw err;
     }
   }
 }

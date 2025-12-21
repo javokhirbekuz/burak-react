@@ -9,50 +9,52 @@ import ProcessOrders from "./ProcessOrders";
 import FinishedOrders from "./FinishidOrders";
 import "../../../css/orders.css";
 import { Dispatch } from "@reduxjs/toolkit";
-import { setFinishedOrders, setPausedOrders, setProcessOrders } from "./slice";
 import { Order, OrderInquiry } from "../../lib/types/order";
+import { setFinishedOrders, setPausedOrders, setProcessOrders } from "./slice";
 import { useDispatch } from "react-redux";
 import { OrderStatus } from "../../lib/enums/order.enum";
 import OrderService from "../../services/OrderService";
+import { useGlobals } from "../../hooks/useGlobals";
 
 const actionDispatch = (dispatch: Dispatch) => ({
-  setPausedOrders: (data: Order[]) => dispatch(setPausedOrders(data)),
   setProcessOrders: (data: Order[]) => dispatch(setProcessOrders(data)),
+  setPausedOrders: (data: Order[]) => dispatch(setPausedOrders(data)),
   setFinishedOrders: (data: Order[]) => dispatch(setFinishedOrders(data)),
 });
+
 export default function OrdersPage() {
   const { setFinishedOrders, setPausedOrders, setProcessOrders } =
     actionDispatch(useDispatch());
+  const { orderBuilder } = useGlobals();
   const [value, setValue] = useState("1");
-  const [orderInquiry, setOrderInquiry] = useState<OrderInquiry>({
+  const [orderIquiry, setOrderInquiry] = useState<OrderInquiry>({
     page: 1,
-    limit: 10,
+    limit: 5,
     orderStatus: OrderStatus.PAUSE,
   });
 
   useEffect(() => {
     const order = new OrderService();
     order
-      .getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.PAUSE })
+      .getMyOrders({ ...orderIquiry, orderStatus: OrderStatus.PAUSE })
       .then((data) => setPausedOrders(data))
-      .catch((error) => {
-        console.log("Error fetching orders on page load:", error);
+      .catch((err) => {
+        console.log(err);
       });
 
     order
-      .getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.PROCESS })
+      .getMyOrders({ ...orderIquiry, orderStatus: OrderStatus.PROCESS })
       .then((data) => setProcessOrders(data))
-      .catch((error) => {
-        console.log("Error fetching orders on page load:", error);
+      .catch((err) => {
+        console.log(err);
       });
-
     order
-      .getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.FINISH })
+      .getMyOrders({ ...orderIquiry, orderStatus: OrderStatus.FINISH })
       .then((data) => setFinishedOrders(data))
-      .catch((error) => {
-        console.log("Error fetching orders on page load:", error);
+      .catch((err) => {
+        console.log(err);
       });
-  }, []);
+  }, [orderIquiry, orderBuilder]);
 
   const handleChange = (e: SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -85,8 +87,8 @@ export default function OrdersPage() {
               </Box>
             </Box>
             <Stack className="order-main-content">
-              <PausedOrders />
-              <ProcessOrders />
+              <PausedOrders setValue={setValue} />
+              <ProcessOrders setValue={setValue} />
               <FinishedOrders />
             </Stack>
           </TabContext>

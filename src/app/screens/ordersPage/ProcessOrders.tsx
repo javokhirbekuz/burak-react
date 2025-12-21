@@ -3,29 +3,84 @@ import { Box, Stack } from "@mui/material";
 import Button from "@mui/material/Button";
 import TabPanel from "@mui/lab/TabPanel";
 import moment from "moment";
+import { createSelector, Dispatch } from "@reduxjs/toolkit";
+import { Order, OrderUpdateInput } from "../../lib/types/order";
+import { setProcessOrders } from "./slice";
+import { retrieveProcessOrders } from "./selector";
+import { useSelector } from "react-redux";
+import { Messages, serverAPI } from "../../lib/config";
+import { T } from "../../lib/types/common";
+import { OrderStatus } from "../../lib/enums/order.enum";
+import OrderService from "../../services/OrderService";
+import { useGlobals } from "../../hooks/useGlobals";
+import { sweetErrorHandling } from "../../lib/sweetAlert";
+import { Product } from "../../lib/types/product";
 
-export default function ProcessOrders() {
+const actionDispatch = (dispatch: Dispatch) => ({
+  setProcessOrders: (data: Order[]) => dispatch(setProcessOrders(data)),
+});
+
+const processOrdersRetriever = createSelector(
+  retrieveProcessOrders,
+  (processOrders) => ({
+    processOrders,
+  })
+);
+interface ProcessOrdersProps {
+  setValue: (input: string) => void;
+}
+
+export default function ProcessOrders(props: ProcessOrdersProps) {
+  const { setValue } = props;
+  const { authMember, setOrderBuilder } = useGlobals();
+  const { processOrders } = useSelector(processOrdersRetriever);
+
+  const finishedOrderHandler = async (e: T) => {
+    try {
+      if (!authMember) {
+        throw new Error(Messages.error2);
+      }
+      const orderId = e.target.value;
+      const input: OrderUpdateInput = {
+        orderId: orderId,
+        orderStatus: OrderStatus.FINISH,
+      };
+      const confirm = window.confirm("Are you sure to verify your order");
+      if (confirm) {
+        const order = new OrderService();
+        await order.updateOrder(input);
+        setValue("3");
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
   return (
     <TabPanel value={"2"}>
       <Stack>
-        {[1, 2].map((ele, index) => {
+        {processOrders?.map((order: Order) => {
           return (
-            <Box key={index} className={"order-main-box"}>
+            <Box key={order._id} className={"order-main-box"}>
               <Box className={"order-box-scroll"}>
-                {[1, 2].map((ele2, index2) => {
+                {order.orderItems.map((item) => {
+                  const product: Product = order.productData.filter(
+                    (ele: Product) => item.productId === ele._id
+                  )[0];
+                  const imagePath = `${serverAPI}/${product.productImages[0]}`;
                   return (
-                    <Box key={index2} className={"orders-name-price"}>
-                      <img
-                        src={"/img/kebab.webp"}
-                        className={"order-dish-img"}
-                      />
-                      <p className={"title-dish"}>Kebab</p>
+                    <Box key={item._id} className={"orders-name-price"}>
+                      <img src={imagePath} className={"order-dish-img"} />
+                      <p className={"title-dish"}>{product.productName}</p>
                       <Box className={"price-box"}>
-                        <p>$11</p>
+                        <p>${item.itemPrice}</p>
                         <img src={"/icons/close.svg"} />
-                        <p>2</p>
+                        <p>{item.itemQuantity}</p>
                         <img src={"/icons/pause.svg"} />
-                        <p style={{ marginLeft: "15px" }}>$22</p>
+                        <p style={{ marginLeft: "15px" }}>
+                          ${item.itemQuantity * item.itemPrice}
+                        </p>
                       </Box>
                     </Box>
                   );
@@ -35,31 +90,41 @@ export default function ProcessOrders() {
               <Box className="total-price-box">
                 <Box className="box-total">
                   <p>Product Price</p>
-                  <p>$22</p>
+                  <p>${order.orderTotal - order.orderDelivery}</p>
                   <p>delivery cost</p>
-                  <p>$2</p>
+                  <p>${order.orderDelivery}</p>
                   <img src="/icons/pause.svg" style={{ marginLeft: "20px" }} />
                   <p>Total</p>
-                  <p>$24</p>
+                  <p>${order.orderTotal}</p>
                 </Box>
                 <p className="data-compl">
                   {moment().format("YYYY-MM-DD HH:mm")}
                 </p>
-                <Button variant="contained" className="verify-button">
+                <Button
+                  value={order._id}
+                  onClick={finishedOrderHandler}
+                  variant="contained"
+                  className="verify-button"
+                >
                   Verify To Fulfil
                 </Button>
               </Box>
             </Box>
           );
         })}
-        {false && (
-          <Box display={"flex"} flexDirection={"row"} justifyContent={"center"}>
-            <img
-              src={"/icons/noimage-list.svg"}
-              style={{ width: 300, height: 300 }}
-            />
-          </Box>
-        )}
+        {!processOrders ||
+          (processOrders.length === 0 && (
+            <Box
+              display={"flex"}
+              flexDirection={"row"}
+              justifyContent={"center"}
+            >
+              <img
+                src={"/icons/noimage-list.svg"}
+                style={{ width: 300, height: 300 }}
+              />
+            </Box>
+          ))}
       </Stack>
     </TabPanel>
   );

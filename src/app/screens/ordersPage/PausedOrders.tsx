@@ -2,41 +2,101 @@ import React from "react";
 import { Box, Stack } from "@mui/material";
 import Button from "@mui/material/Button";
 import TabPanel from "@mui/lab/TabPanel";
-import { useSelector } from "react-redux";
-import { retriveOrdersPage } from "./selector";
+import { useDispatch, useSelector } from "react-redux";
+import { createSelector, Dispatch } from "@reduxjs/toolkit";
+import { Order, OrderUpdateInput } from "../../lib/types/order";
+import { setPausedOrders } from "./slice";
+import { retrievePausedOrders } from "./selector";
 import { Product } from "../../lib/types/product";
-import { serverAPI } from "../../lib/config";
+import { Messages, serverAPI } from "../../lib/config";
+import { sweetErrorHandling } from "../../lib/sweetAlert";
+import { T } from "../../lib/types/common";
+import { OrderStatus } from "../../lib/enums/order.enum";
+import OrderService from "../../services/OrderService";
+import { useGlobals } from "../../hooks/useGlobals";
+import { error } from "console";
 
-export default function PausedOrders() {
-  const { pausedOrders } = useSelector(retriveOrdersPage);
+const actionDispatch = (dispatch: Dispatch) => ({
+  setPausedOrders: (data: Order[]) => dispatch(setPausedOrders(data)),
+});
+const pausedOrdersRetriever = createSelector(
+  retrievePausedOrders,
+  (pausedOrders) => ({
+    pausedOrders,
+  })
+);
+interface PausedOrdersProps {
+  setValue: (input: string) => void;
+}
+
+export default function PausedOrders(props: PausedOrdersProps) {
+  const { setValue } = props;
+  const { authMember, setOrderBuilder } = useGlobals();
+  const { pausedOrders } = useSelector(pausedOrdersRetriever);
+
+  const deleteOrderHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      const orderId = e.target.value;
+      const input: OrderUpdateInput = {
+        orderId: orderId,
+        orderStatus: OrderStatus.DELETE,
+      };
+      const confirm = window.confirm("Are You Sure?");
+      if (confirm) {
+        const order = new OrderService();
+        await order.updateOrder(input);
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
+
+  const processOrderHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      const orderId = e.target.value;
+      const input: OrderUpdateInput = {
+        orderId: orderId,
+        orderStatus: OrderStatus.PROCESS,
+      };
+      const confirm = window.confirm("Are You Sure to make a payment?");
+      if (confirm) {
+        const order = new OrderService();
+        await order.updateOrder(input);
+        setValue("2");
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
   return (
     <TabPanel value={"1"}>
       <Stack>
-        {pausedOrders.map((order) => {
+        {pausedOrders?.map((order: Order) => {
           return (
             <Box key={order._id} className={"order-main-box"}>
               <Box className={"order-box-scroll"}>
-                {order.orderItems.map((orderItem) => {
+                {order.orderItems.map((item) => {
                   const product: Product = order.productData.filter(
-                    (ele: Product) =>
-                      String(ele._id) === String(orderItem.productId)
+                    (ele: Product) => item.productId === ele._id
                   )[0];
-                  if (!product) return null;
                   const imagePath = `${serverAPI}/${product.productImages[0]}`;
                   return (
-                    <Box key={orderItem._id} className={"orders-name-price"}>
-                      <img
-                        src={"/img/lavash.webp"}
-                        className={"order-dish-img"}
-                      />
+                    <Box key={item._id} className={"orders-name-price"}>
+                      <img src={imagePath} className={"order-dish-img"} />
                       <p className={"title-dish"}>{product.productName}</p>
                       <Box className={"price-box"}>
-                        <p>${orderItem.itemPrice}</p>
+                        <p> $ {item.itemPrice}</p>
                         <img src={"/icons/close.svg"} />
-                        <p>{orderItem.itemQuantity}</p>
+                        <p>{item.itemQuantity}</p>
                         <img src={"/icons/pause.svg"} />
                         <p style={{ marginLeft: "15px" }}>
-                          {orderItem.itemPrice * orderItem.itemQuantity}
+                          ${item.itemQuantity * item.itemPrice}
                         </p>
                       </Box>
                     </Box>
@@ -48,13 +108,13 @@ export default function PausedOrders() {
                 <Box className="box-total">
                   <Box className={"box-total"}>
                     <p>Product price</p>
-                    <p>${order.orderTotal - order.orderDelivery}</p>
+                    <p>$ {order.orderTotal - order.orderDelivery}</p>
                     <img
                       src={"/icons/plus.svg"}
                       style={{ marginLeft: "20px" }}
                     />
                     <p>Delivery cost</p>
-                    <p>${order.orderDelivery}</p>
+                    <p>$ {order.orderDelivery}</p>
                     <img
                       src={"/icons/pause.svg"}
                       style={{ marginLeft: "20px" }}
@@ -63,13 +123,21 @@ export default function PausedOrders() {
                     <p>${order.orderTotal}</p>
                   </Box>
                   <Button
+                    value={order._id}
                     variant="contained"
                     color="secondary"
                     className={"cancel-button"}
+                    onClick={deleteOrderHandler}
                   >
                     Cancel
                   </Button>
-                  <Button variant="contained" className={"pay-button"}>
+
+                  <Button
+                    value={order._id}
+                    variant="contained"
+                    className={"pay-button"}
+                    onClick={processOrderHandler}
+                  >
                     Payment
                   </Button>
                 </Box>

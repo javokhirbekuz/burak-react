@@ -1,15 +1,19 @@
-import { createSelector } from "reselect";
+import { createSelector } from "@reduxjs/toolkit";
 import { AppRootState } from "../../lib/types/store";
 
 const selectOrdersPage = (state: AppRootState) => state.ordersPage;
 
-export const retriveOrdersPage = createSelector(
+export const retrievePausedOrders = createSelector(
   selectOrdersPage,
-  (ordersPage) => {
-    return {
-      pausedOrders: ordersPage.pausedOrders,
-      processOrders: ordersPage.processOrders,
-      finishedOrders: ordersPage.finishedOrders,
-    };
-  }
+  (OrdersPage) => OrdersPage.pausedOrders
+);
+
+export const retrieveProcessOrders = createSelector(
+  selectOrdersPage,
+  (OrdersPage) => OrdersPage.processOrders
+);
+
+export const retrieveFinishedOrders = createSelector(
+  selectOrdersPage,
+  (OrdersPage) => OrdersPage.finishedOrders
 );
