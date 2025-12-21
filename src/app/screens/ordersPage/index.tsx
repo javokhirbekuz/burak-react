@@ -15,6 +15,10 @@ import { useDispatch } from "react-redux";
 import { OrderStatus } from "../../lib/enums/order.enum";
 import OrderService from "../../services/OrderService";
 import { useGlobals } from "../../hooks/useGlobals";
+import { sweetFailureProvider } from "../../lib/sweetAlert";
+import { useHistory } from "react-router-dom";
+import { serverAPI } from "../../lib/config";
+import { MemberType } from "../../lib/enums/member.enum";
 
 const actionDispatch = (dispatch: Dispatch) => ({
   setProcessOrders: (data: Order[]) => dispatch(setProcessOrders(data)),
@@ -59,7 +63,12 @@ export default function OrdersPage() {
   const handleChange = (e: SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
-
+  const history = useHistory();
+  const { authMember } = useGlobals();
+  if (!authMember) {
+    sweetFailureProvider("Please login first");
+    history.push("/");
+  }
   return (
     <div className="order-page">
       <Container
@@ -98,23 +107,34 @@ export default function OrdersPage() {
             <Box className="member-box">
               <div className="order-user-img avatar-hover">
                 <img
-                  src="/icons/default-user.svg"
+                  src={
+                    authMember?.memberImage
+                      ? `${serverAPI}/${authMember.memberImage} `
+                      : "/icons/default-user.svg"
+                  }
                   className="order-user-avatar"
                 />
                 <div className="order-user-icon-box">
                   <img
-                    src="/icons/user-badge.svg"
+                    src={
+                      authMember?.memberType === MemberType.USER
+                        ? "/icons/user-badge.svg"
+                        : "/icons/restaurant.svg"
+                    }
                     className="order-user-prof-img"
                   />
                 </div>
               </div>
-              <span className="order-user-name">JOE</span>
-              <span className="order-user-prof">User</span>
+              <span className="order-user-name">{authMember?.memberNick}</span>
+              <span className="order-user-prof">{authMember?.memberType}</span>
             </Box>
             <Divider className="soft-divider" />
             <Box className="member-location">
               <div className="member-location-info">
-                <LocationOnIcon /> Busan, South Korea
+                <LocationOnIcon />{" "}
+                {authMember?.memberAddress
+                  ? authMember.memberAddress
+                  : "no address"}
               </div>
             </Box>
           </Box>
